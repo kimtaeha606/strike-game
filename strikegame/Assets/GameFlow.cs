@@ -120,17 +120,8 @@ public sealed class GameFlow : MonoBehaviour
 
         // 시작 샷 Arm
         ArmCurrentShot();
-        EnsureNextGlovePrepared();
     }
 
-    private void EnsureNextGlovePrepared()
-    {
-        if (nextGlove != null) return;
-        if (difficultyDirector == null || gloveSpawner == null || currentGlove == null) return;
-
-        GloveSpec spec = difficultyDirector.GetNextSpec(score);
-        nextGlove = gloveSpawner.SpawnNext(currentGlove, spec);
-    }
 
     private void EnterGameOver()
     {
@@ -223,33 +214,50 @@ public sealed class GameFlow : MonoBehaviour
         if (subscribedGlove != null)
             subscribedGlove.DisarmShot();
 
+            bool filledThisFrame = false;
+
         // next 없으면 생성
+        if (nextGlove == currentGlove) nextGlove = null;
         if (nextGlove == null)
         {
             GloveSpec spec = difficultyDirector.GetNextSpec(score);
             nextGlove = gloveSpawner.SpawnNext(oldCurrent, spec);
             if (nextGlove == null) return;
+
+            filledThisFrame = true;
+
         }
 
         // current 교체(구독 대상도 교체)
         SetCurrentGlove(nextGlove);
+        nextGlove = null;
 
         // 공 리셋
         ResetBallTo(currentGlove.StartPoint.position);
 
         // ✅ 다음 샷 시작
         ArmCurrentShot();
+        if (filledThisFrame)
+        {
+            if (oldCurrent != null && oldCurrent != currentGlove)
+                Destroy(oldCurrent.gameObject);
+            return;
+        }
 
-        // 다음 글러브 미리 생성
-        GloveSpec nextSpec = difficultyDirector.GetNextSpec(score);
-        nextGlove = gloveSpawner.SpawnNext(currentGlove, nextSpec);
+        else
+        {
+            // 다음 글러브 미리 생성
+            GloveSpec nextSpec = difficultyDirector.GetNextSpec(score);
+            nextGlove = gloveSpawner.SpawnNext(currentGlove, nextSpec);
+            if (oldCurrent != null && oldCurrent != currentGlove)
+                Destroy(oldCurrent.gameObject);
+        }
 
         // ✅ 이전 글러브 삭제(원하면)
         // 스포너를 "매번 Instantiate" 방식으로 바꿨다면 아래를 켜라.
         // (풀링 1개 구조면 Destroy하면 안 됨)
         //
-        //if (oldCurrent != null && oldCurrent != currentGlove)
-             //Destroy(oldCurrent.gameObject);
+        
     }
 
     private void HandleMissed(GoalGlove glove)
@@ -257,4 +265,6 @@ public sealed class GameFlow : MonoBehaviour
         if (state != GameState.Playing) return;
         EnterGameOver();
     }
+
+    
 }
