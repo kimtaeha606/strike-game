@@ -128,7 +128,6 @@ public sealed class GameFlow : MonoBehaviour
 
     private void HandleMissed(GoalGlove glove)
     {
-        Debug.Log("Missed");
-        // 필요하면 여기서 GameOver 처리
+        EnterGameOver();
     }
 }
