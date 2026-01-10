@@ -42,7 +42,6 @@ public sealed class GoalGlove : MonoBehaviour
 
         resolved = true;
         OnScored?.Invoke(this);
-        Debug.Log("기모찌");
     }
 
     // FailTrigger가 호출
@@ -52,7 +51,6 @@ public sealed class GoalGlove : MonoBehaviour
 
         resolved = true;
         OnMissed?.Invoke(this);
-        Debug.Log("이씨발");
     }
 
     // 공통 가드(중복/다른 공/샷 아님 방지)
