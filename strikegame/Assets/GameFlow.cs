@@ -15,7 +15,11 @@ public sealed class GameFlow : MonoBehaviour
 
     [Header("Refs")]
     [SerializeField] private GoalGlove goalGlove;
+    [SerializeField] private DifficultyDirector difficultyDirector;
+    [SerializeField] private GloveSpawner gloveSpawner;
 
+    [SerializeField] private GoalGlove currentGlove;
+    private GoalGlove nextGlove;
     [Header("Score")]
     [SerializeField] private int score = 0;
     public int Score => score;
@@ -129,5 +133,19 @@ public sealed class GameFlow : MonoBehaviour
     private void HandleMissed(GoalGlove glove)
     {
         EnterGameOver();
+    }
+
+    private void SpawnNextGlove(int score)
+    {
+        if (difficultyDirector == null || gloveSpawner == null)
+        {
+            {
+                Debug.LogError("[GameFlow] Missing refs (difficultyDirector / gloveSpawner / currentGlove)");
+                return;
+            }
+        }
+        GloveSpec spec = difficultyDirector.GetNextSpec(score);
+
+        nextGlove = gloveSpawner.SpawnNext(currentGlove,spec);
     }
 }
