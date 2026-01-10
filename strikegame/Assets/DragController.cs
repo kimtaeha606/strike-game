@@ -9,6 +9,9 @@ public class DragController : MonoBehaviour
 
     public float dragLimit = 3f;
     public float forceToAdd = 10f;
+    [SerializeField] private GoalGlove glove;
+    [SerializeField] private Rigidbody2D ballRb;
+    [SerializeField] private Collider2D ballCol;
 
     private Camera cam;
     private bool isDragging;
@@ -83,6 +86,8 @@ public class DragController : MonoBehaviour
 
     void DragEnd()
     {
+        glove.ArmShot(ballCol);
+        
         isDragging = false;
         line.enabled = false;
 
