@@ -6,6 +6,7 @@ public sealed class FailTrigger : MonoBehaviour
 
     private void Awake()
     {
+        Debug.Log("failtrigger");
         if (glove == null)
             glove = GetComponentInParent<GoalGlove>();
     }
@@ -14,6 +15,7 @@ public sealed class FailTrigger : MonoBehaviour
     {
         if (!other.CompareTag("Ball")) return;
         if (glove == null) return;
+        Debug.Log("트리거 감지");
 
         glove.NotifyFail(other);
     }

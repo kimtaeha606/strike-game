@@ -12,6 +12,10 @@ public sealed class GoalGlove : MonoBehaviour
     [SerializeField] private Transform startPoint;
     public Transform StartPoint => startPoint;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip goalClip;
+
     public event Action<GoalGlove> OnScored;
     public event Action<GoalGlove> OnMissed;
 
@@ -42,13 +46,22 @@ public sealed class GoalGlove : MonoBehaviour
         if (!CanResolve(ball)) return;
 
         resolved = true;
+        if (goalClip != null)
+        {
+            if (audioSource != null)
+                audioSource.PlayOneShot(goalClip);
+            else
+                AudioSource.PlayClipAtPoint(goalClip, transform.position);
+        }
         OnScored?.Invoke(this);
     }
 
     // FailTrigger가 호출
     public void NotifyFail(Collider2D ball)
     {
+        Debug.Log("Notify는 실행");
         if (!CanResolve(ball)) return;
+        Debug.Log("if문 수행");
 
         resolved = true;
         OnMissed?.Invoke(this);

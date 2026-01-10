@@ -10,6 +10,8 @@ public sealed class ScoreView : MonoBehaviour
     private void Awake()
     {
         if (gameFlow == null) gameFlow = FindFirstObjectByType<GameFlow>();
+        if (scoreText == null) scoreText = GetComponentInChildren<TMP_Text>(true);
+        if (scoreText == null) scoreText = GetComponent<TMP_Text>();
     }
 
     private void OnEnable()
@@ -28,5 +30,6 @@ public sealed class ScoreView : MonoBehaviour
     private void HandleScoreChanged(int newScore)
     {
         if (scoreText != null) scoreText.text = newScore.ToString();
+        else Debug.LogWarning("[ScoreView] TMP_Text not assigned.");
     }
 }

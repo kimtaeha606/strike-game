@@ -1,6 +1,6 @@
 // DifficultyDirector.cs
-// Ã¥ÀÓ: score -> GloveSpec(´ÙÀ½ ±Û·¯ºê Å¸ÀÔ/ÆÄ¶ó¹ÌÅÍ) "°áÁ¤"¸¸ ÇÑ´Ù.
-// ±ÝÁö: Instantiate, À§Ä¡ ·£´ý(¹èÄ¡), Á¡¼ö º¯°æ, °ÔÀÓ ÁøÇà
+// Ã¥ï¿½ï¿½: score -> GloveSpec(ï¿½ï¿½ï¿½ï¿½ ï¿½Û·ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½/ï¿½Ä¶ï¿½ï¿½ï¿½ï¿½) "ï¿½ï¿½ï¿½ï¿½"ï¿½ï¿½ ï¿½Ñ´ï¿½.
+// ï¿½ï¿½ï¿½ï¿½: Instantiate, ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½Ä¡), ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
 using System;
 using UnityEngine;
@@ -17,11 +17,11 @@ public struct GloveSpec
 {
     public GloveType type;
 
-    // ½ºÆù/¹èÄ¡ ÂÊ¿¡¼­ »ç¿ëÇÒ ÆÄ¶ó¹ÌÅÍ
-    public float gapX;     // ´ÙÀ½ ±Û·¯ºê±îÁöÀÇ ±âº» °Å¸®
-    public float scale;    // ±Û·¯ºê ½ºÄÉÀÏ(1=±âº»)
+    // ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½Ä¡ ï¿½Ê¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ä¶ï¿½ï¿½ï¿½ï¿½
+    public float gapX;     // ï¿½ï¿½ï¿½ï¿½ ï¿½Û·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½âº» ï¿½Å¸ï¿½
+    public float scale;    // ï¿½Û·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(1=ï¿½âº»)
 
-    // (¼±ÅÃ) ±Û·¯ºê ÀÌµ¿ ³­ÀÌµµ ÆÄ¶ó¹ÌÅÍ
+    // (ï¿½ï¿½ï¿½ï¿½) ï¿½Û·ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ ï¿½ï¿½ï¿½Ìµï¿½ ï¿½Ä¶ï¿½ï¿½ï¿½ï¿½
     public float moveAmpX;
     public float moveAmpY;
     public float moveSpeed;
@@ -50,7 +50,7 @@ public sealed class DifficultyDirector : MonoBehaviour
     {
         [Header("Score Range")]
         [Min(0)] public int minScore = 0;   // inclusive
-        [Min(0)] public int maxScore = 9;   // inclusive (maxScore < 0 ÀÌ¸é ¹«ÇÑ)
+        [Min(0)] public int maxScore = 9;   // inclusive (maxScore < 0 ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½)
 
         [Header("Weights (Relative)")]
         [Min(0)] public int normalWeight = 100;
@@ -88,7 +88,7 @@ public sealed class DifficultyDirector : MonoBehaviour
     [SerializeField] private float fallbackScale = 1f;
 
     /// <summary>
-    /// score¸¦ ÀÔ·ÂÀ¸·Î ¹Þ¾Æ ´ÙÀ½ ±Û·¯ºê ½ºÆåÀ» °áÁ¤ÇØ ¹ÝÈ¯ÇÑ´Ù.
+    /// scoreï¿½ï¿½ ï¿½Ô·ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Þ¾ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Û·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯ï¿½Ñ´ï¿½.
     /// </summary>
     public GloveSpec GetNextSpec(int score)
     {
@@ -104,7 +104,7 @@ public sealed class DifficultyDirector : MonoBehaviour
             tier.farWeight,
             tier.smallWeight);
 
-        // Å¸ÀÔº° preset Àû¿ë + (¼±ÅÃ) ÀÌµ¿ ÆÄ¶ó¹ÌÅÍ´Â tier °øÅëÀ¸·Î ¾ñÀ½
+        // Å¸ï¿½Ôºï¿½ preset ï¿½ï¿½ï¿½ï¿½ + (ï¿½ï¿½ï¿½ï¿½) ï¿½Ìµï¿½ ï¿½Ä¶ï¿½ï¿½ï¿½Í´ï¿½ tier ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         switch (picked)
         {
             case GloveType.Far:
@@ -146,7 +146,7 @@ public sealed class DifficultyDirector : MonoBehaviour
                 return tiers[i];
         }
 
-        // ¸ÅÄª ¾øÀ¸¸é ¸¶Áö¸· Æ¼¾î¸¦ fallbackÀ¸·Î »ç¿ë(¿øÇÏ¸é null ¹ÝÈ¯À¸·Î ¹Ù²ãµµ µÊ)
+        // ï¿½ï¿½Äª ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Æ¼ï¿½î¸¦ fallbackï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½Ï¸ï¿½ null ï¿½ï¿½È¯ï¿½ï¿½ï¿½ï¿½ ï¿½Ù²ãµµ ï¿½ï¿½)
         return tiers[tiers.Length - 1];
     }
 

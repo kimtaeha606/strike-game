@@ -6,45 +6,66 @@ public sealed class GloveSpawner : MonoBehaviour
     [SerializeField] private GoalGlove glovePrefab;
 
     [Header("Placement")]
-    [SerializeField] private float minY = -3.5f;
-    [SerializeField] private float maxY = 3.5f;
+    [Tooltip("Screen padding in world units.")]
+    [SerializeField] private float screenPadding = 0.5f;
 
-    [Tooltip("x축에 랜덤 흔들림. 0이면 없음")]
+    [Tooltip("Extra random offset on X.")]
     [SerializeField] private float xJitter = 0f;
 
-    [Tooltip("y 랜덤값을 얼마나 반영할지. 1=그대로, 0=항상 0")]
     [Range(0f, 1f)]
     [SerializeField] private float yRandomness = 1f;
 
+    [Header("Aim")]
+    [SerializeField] private Transform ballTarget;
+    public Transform BallTarget
+    {
+        get => ballTarget;
+        set => ballTarget = value;
+    }
+
+    private Camera cam;
+
+    private void Awake()
+    {
+        cam = Camera.main;
+    }
+
     public GoalGlove SpawnNext(GoalGlove current, GloveSpec spec)
     {
-        if (glovePrefab == null)
-        {
-            Debug.LogError("[GloveSpawner] glovePrefab is null");
-            return null;
-        }
+        if (glovePrefab == null) return null;
+        if (cam == null) cam = Camera.main;
+        if (cam == null) return null;
 
-        if (current == null)
-        {
-            Debug.LogError("[GloveSpawner] current is null");
-            return null;
-        }
-
-        // ✅ 매번 새로 생성
         GoalGlove next = Instantiate(glovePrefab);
 
-        Vector3 basePos = current.transform.position;
+        Vector3 min = cam.ViewportToWorldPoint(new Vector3(0f, 0f, 0f));
+        Vector3 max = cam.ViewportToWorldPoint(new Vector3(1f, 1f, 0f));
 
+        float halfW = 0f;
+        float halfH = 0f;
+
+        var sr = next.GetComponentInChildren<SpriteRenderer>();
+        if (sr != null)
+        {
+            halfW = sr.bounds.extents.x;
+            halfH = sr.bounds.extents.y;
+        }
+
+        float minX = min.x + screenPadding + halfW;
+        float maxX = max.x - screenPadding - halfW;
+        float minY = min.y + screenPadding + halfH;
+        float maxY = max.y - screenPadding - halfH;
+
+        float rawX = Random.Range(minX, maxX);
+        float rawY = Mathf.Lerp(0f, Random.Range(minY, maxY), yRandomness);
         float jitterX = (xJitter <= 0f) ? 0f : Random.Range(-xJitter, xJitter);
-        float x = basePos.x + spec.gapX + jitterX;
 
-        float rawY = Random.Range(minY, maxY);
-        float y = Mathf.Lerp(0f, rawY, yRandomness);
+        float x = Mathf.Clamp(rawX + jitterX, minX, maxX);
+        float y = Mathf.Clamp(rawY, minY, maxY);
 
         next.transform.position = new Vector3(x, y, 0f);
 
-        float s = Mathf.Max(0.01f, spec.scale);
-        next.transform.localScale = Vector3.one * s;
+        AimMinusXAtTarget(next.transform, ballTarget);
 
         return next;
     }
@@ -53,5 +74,16 @@ public sealed class GloveSpawner : MonoBehaviour
     {
         if (glove == null) return;
         Destroy(glove.gameObject);
+    }
+
+    private static void AimMinusXAtTarget(Transform glove, Transform target)
+    {
+        if (glove == null || target == null) return;
+
+        Vector3 toTarget = target.position - glove.position;
+        if (toTarget.sqrMagnitude <= 0f) return;
+
+        // Make local -X point toward target.
+        glove.right = -toTarget.normalized;
     }
 }

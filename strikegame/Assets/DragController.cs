@@ -11,6 +11,9 @@ public class DragController : MonoBehaviour
     public float forceToAdd = 10f;
     [SerializeField] private GoalGlove glove;
     [SerializeField] private TrajectoryLine trajectoryLine;
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip launchClip;
 
     public GoalGlove Glove
     {
@@ -152,6 +155,14 @@ public class DragController : MonoBehaviour
 
             // 던지는 방향: 당긴 반대 방향
             rb.AddForce(-(Vector2)dragVector * forceToAdd, ForceMode2D.Impulse);
+
+            if (launchClip != null)
+            {
+                if (audioSource != null)
+                    audioSource.PlayOneShot(launchClip);
+                else
+                    AudioSource.PlayClipAtPoint(launchClip, rb.position);
+            }
         }
 }
 
