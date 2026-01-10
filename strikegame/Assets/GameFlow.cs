@@ -161,6 +161,7 @@ public sealed class GameFlow : MonoBehaviour
             dragController.SetCurrentGlove(currentGlove);
 
         ResetBallTo(currentGlove.StartPoint.position);
+        goalGlove.DisarmShot();
 
         GloveSpec nextSpec = difficultyDirector.GetNextSpec(score);
         nextGlove = gloveSpawner.SpawnNext(currentGlove, nextSpec);
