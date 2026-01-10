@@ -15,7 +15,23 @@ public class DragController : MonoBehaviour
 
     private Camera cam;
     private bool isDragging;
+    private bool inputEnabled = true;
+    
+    public void EnableInput(bool enable)
+    {
+        inputEnabled = enable;
 
+        if (!enable)
+        {
+            isDragging = false;
+            if (line != null) line.enabled = false;
+        }
+    }
+
+    public void SetCurrentGlove(GoalGlove currentGlove) // 현재 글러브가 어떤 글러브인지 알려주는 용도인데 이 스크립트랑 역할이 안 맞는데 일단 놔둠
+    {
+        glove = currentGlove;
+    }
     Vector3 MousePosition
     {
         get
@@ -31,70 +47,88 @@ public class DragController : MonoBehaviour
     private void Start()
     {
         cam = Camera.main;
-        line.positionCount = 2;
-        line.enabled = false;
-        if (rb == null) rb = GetComponent<Rigidbody2D>();
+        if (line != null)
+        {
+            line.positionCount = 2;
+            line.enabled = false;
+        }
+
+        if (rb == null) 
+            rb = GetComponent<Rigidbody2D>();
     }
 
     private void Update()
     {
-        // Mouse.current.leftButton 사용
+        if (!inputEnabled) return;
+        if (Mouse.current == null) return;
+
         var leftButton = Mouse.current.leftButton;
 
         if (leftButton.wasPressedThisFrame && !isDragging)
-        {
             DragStart();
-        }
 
-        if (isDragging)
-        {
-            Drag();
-            
-            if (leftButton.wasReleasedThisFrame)
-            {
-                DragEnd();
-            }
-        }
+        if (!isDragging) return;
+
+        Drag();
+
+        if (leftButton.wasReleasedThisFrame)
+            DragEnd();
     }
 
-    void DragStart()
+    private void DragStart()
     {
+        if (glove == null || rb == null) return;
+
         isDragging = true;
-        line.enabled = true;
-        line.SetPosition(0, transform.position);
-        line.SetPosition(1, transform.position);
-    }
 
-    void Drag()
-    {
-        Vector3 startPos = transform.position;
-        line.SetPosition(0, startPos);
-
-        Vector3 currentPos = MousePosition;
-        Vector3 distance = currentPos - startPos;
-
-        if (distance.magnitude <= dragLimit)
+        if (line != null)
         {
-            line.SetPosition(1, currentPos);
-        }
-        else
-        {
-            Vector3 limitVector = startPos + (distance.normalized * dragLimit);
-            line.SetPosition(1, limitVector);
+            line.enabled = true;
+            line.SetPosition(0, transform.position);
+            line.SetPosition(1, transform.position);
         }
     }
 
-    void DragEnd()
+    private void Drag()
     {
-        glove.ArmShot(ballCol);
-        
-        isDragging = false;
-        line.enabled = false;
+            Vector3 startPos = transform.position;
 
-        Vector3 startPos = line.GetPosition(0);
-        Vector3 endPos = line.GetPosition(1);
-        Vector3 dragVector = endPos - startPos;
+            if (line != null)
+                line.SetPosition(0, startPos);
 
-        rb.AddForce(-dragVector * forceToAdd, ForceMode2D.Impulse);
-    }
+            Vector3 currentPos = MousePosition;
+            Vector3 distance = currentPos - startPos;
+
+            Vector3 endPos;
+            if (distance.magnitude <= dragLimit)
+                endPos = currentPos;
+            else
+                endPos = startPos + (distance.normalized * dragLimit);
+
+            if (line != null)
+                line.SetPosition(1, endPos);
+        }
+
+    private void DragEnd()
+    {
+            isDragging = false;
+            if (line != null) line.enabled = false;
+
+            if (glove == null || rb == null) return;
+
+            // (중요) 이 샷에서만 점수 1회 되도록 GoalGlove 쪽을 "무장"
+            glove.ArmShot(ballCol);
+
+            // 발사 벡터 계산
+            Vector3 startPos = (line != null) ? line.GetPosition(0) : transform.position;
+            Vector3 endPos = (line != null) ? line.GetPosition(1) : transform.position;
+            Vector3 dragVector = endPos - startPos;
+
+            // 발사 전 물리 리셋(이전 속도 누적 방지)
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+
+            // 던지는 방향: 당긴 반대 방향
+            rb.AddForce(-(Vector2)dragVector * forceToAdd, ForceMode2D.Impulse);
+        }
 }
