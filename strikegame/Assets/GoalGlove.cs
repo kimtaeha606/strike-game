@@ -38,6 +38,7 @@ public sealed class GoalGlove : MonoBehaviour
     // GoalTrigger가 호출
     public void NotifyGoal(Collider2D ball)
     {
+        Debug.Log("notifyGoal 실행완료");
         if (!CanResolve(ball)) return;
 
         resolved = true;

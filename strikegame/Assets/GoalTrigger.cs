@@ -12,6 +12,7 @@ public sealed class GoalTrigger : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        Debug.Log("트리거 감지는 됨");
         if (!other.CompareTag("Ball")) return;
         if (glove == null) return;
 

@@ -22,6 +22,9 @@ public sealed class GameFlow : MonoBehaviour
     private GoalGlove nextGlove;
     [Header("Score")]
     [SerializeField] private int score = 0;
+
+    [SerializeField] private Rigidbody2D ballRb;
+    [SerializeField] private Transform ballTf;
     public int Score => score;
 
     // (선택) UI가 구독할 수 있게 점수 변경 이벤트 제공
@@ -114,6 +117,24 @@ public sealed class GameFlow : MonoBehaviour
         OnScoreChanged?.Invoke(score);
     }
 
+    private void ResetBallTo(Vector3 worldPos)
+    {
+        if (ballRb == null) return;
+
+        Transform t = (ballTf != null) ? ballTf : ballRb.transform;
+
+        // 위치 스냅
+        t.position = worldPos;
+
+        // 물리 초기화
+        ballRb.linearVelocity = Vector2.zero;
+        ballRb.angularVelocity = 0f;
+
+        // (선택) 물리 안정화
+        ballRb.Sleep();
+        ballRb.WakeUp();
+    }
+
     private void HandleScored(GoalGlove glove)
     {
         score += 1;
@@ -127,7 +148,22 @@ public sealed class GameFlow : MonoBehaviour
             PlayerPrefs.Save();
         }
 
-        Debug.Log($"Scored! score={score}, best={BestScore}");
+        if (nextGlove == null)
+        {
+            GloveSpec spec = difficultyDirector.GetNextSpec(score);
+            nextGlove = gloveSpawner.SpawnNext(currentGlove, spec);
+            if (nextGlove == null) return;
+        }
+
+        currentGlove = nextGlove;
+
+        if (dragController != null)
+            dragController.SetCurrentGlove(currentGlove);
+
+        ResetBallTo(currentGlove.StartPoint.position);
+
+        GloveSpec nextSpec = difficultyDirector.GetNextSpec(score);
+        nextGlove = gloveSpawner.SpawnNext(currentGlove, nextSpec);
     }
 
     private void HandleMissed(GoalGlove glove)
