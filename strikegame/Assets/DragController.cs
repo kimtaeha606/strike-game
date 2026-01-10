@@ -10,6 +10,7 @@ public class DragController : MonoBehaviour
     public float dragLimit = 3f;
     public float forceToAdd = 10f;
     [SerializeField] private GoalGlove glove;
+    [SerializeField] private TrajectoryLine trajectoryLine;
 
     public GoalGlove Glove
     {
@@ -22,6 +23,8 @@ public class DragController : MonoBehaviour
     private Camera cam;
     private bool isDragging;
     private bool inputEnabled = true;
+    private Vector3 dragStartPos;
+    private Vector3 lastDragVector;
     
     public void EnableInput(bool enable)
     {
@@ -31,6 +34,7 @@ public class DragController : MonoBehaviour
         {
             isDragging = false;
             if (line != null) line.enabled = false;
+            if (trajectoryLine != null) trajectoryLine.Hide();
         }
     }
 
@@ -83,21 +87,27 @@ public class DragController : MonoBehaviour
         if (glove == null || rb == null) return;
 
         isDragging = true;
+        dragStartPos = rb != null ? (Vector3)rb.position : transform.position;
+        lastDragVector = Vector3.zero;
 
         if (line != null)
         {
             line.enabled = true;
-            line.SetPosition(0, transform.position);
-            line.SetPosition(1, transform.position);
+            if (line.positionCount < 2) line.positionCount = 2;
+            line.SetPosition(0, dragStartPos);
+            line.SetPosition(1, dragStartPos);
         }
     }
 
     private void Drag()
     {
-            Vector3 startPos = transform.position;
+            Vector3 startPos = rb != null ? (Vector3)rb.position : dragStartPos;
 
             if (line != null)
+            {
+                if (line.positionCount < 2) line.positionCount = 2;
                 line.SetPosition(0, startPos);
+            }
 
             Vector3 currentPos = MousePosition;
             Vector3 distance = currentPos - startPos;
@@ -109,13 +119,24 @@ public class DragController : MonoBehaviour
                 endPos = startPos + (distance.normalized * dragLimit);
 
             if (line != null)
+            {
+                if (line.positionCount < 2) line.positionCount = 2;
                 line.SetPosition(1, endPos);
+            }
+
+            lastDragVector = endPos - startPos;
+            if (trajectoryLine != null)
+            {
+                Vector2 v0 = -(Vector2)lastDragVector * forceToAdd / rb.mass;
+                trajectoryLine.Show(startPos, v0);
+            }
         }
 
     private void DragEnd()
     {
             isDragging = false;
             if (line != null) line.enabled = false;
+            if (trajectoryLine != null) trajectoryLine.Hide();
 
             if (glove == null || rb == null) return;
 
@@ -123,9 +144,7 @@ public class DragController : MonoBehaviour
             glove.ArmShot(ballCol);
 
             // 발사 벡터 계산
-            Vector3 startPos = (line != null) ? line.GetPosition(0) : transform.position;
-            Vector3 endPos = (line != null) ? line.GetPosition(1) : transform.position;
-            Vector3 dragVector = endPos - startPos;
+            Vector3 dragVector = lastDragVector;
 
             // 발사 전 물리 리셋(이전 속도 누적 방지)
             rb.linearVelocity = Vector2.zero;

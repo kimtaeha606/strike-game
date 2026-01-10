@@ -633,7 +633,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 30
+  orthographic size: 12
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -658,7 +658,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.95, y: -0.95, z: -10}
+  m_LocalPosition: {x: 32.92, y: -11.64, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1264,6 +1264,7 @@ GameObject:
   - component: {fileID: 2021095365}
   - component: {fileID: 2021095364}
   - component: {fileID: 2021095363}
+  - component: {fileID: 2021095369}
   m_Layer: 0
   m_Name: Ball
   m_TagString: Ball
@@ -1297,7 +1298,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 98201b63785802540a5dff20a8b15674, type: 2}
+  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1322,7 +1323,7 @@ LineRenderer:
   m_MaskInteraction: 0
   m_Positions:
   - {x: 0, y: 0, z: 0}
-  - {x: 10, y: 0, z: 1}
+  - {x: 2, y: 0, z: 1}
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 0.1
@@ -1331,7 +1332,7 @@ LineRenderer:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 1
+        value: 0.98518515
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -1343,10 +1344,10 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0}
+      key0: {r: 1, g: 1, b: 1, a: 1}
       key1: {r: 1, g: 1, b: 1, a: 0}
-      key2: {r: 0, g: 0, b: 0, a: 1}
-      key3: {r: 0, g: 0, b: 0, a: 1}
+      key2: {r: 0, g: 0, b: 0, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
       key5: {r: 0, g: 0, b: 0, a: 0}
       key6: {r: 0, g: 0, b: 0, a: 0}
@@ -1361,14 +1362,14 @@ LineRenderer:
       ctime7: 0
       atime0: 0
       atime1: 65535
-      atime2: 61680
-      atime3: 61680
+      atime2: 0
+      atime3: 0
       atime4: 0
       atime5: 0
       atime6: 0
       atime7: 0
       m_Mode: 0
-      m_ColorSpace: 0
+      m_ColorSpace: -1
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
     numCornerVertices: 0
@@ -1398,6 +1399,7 @@ MonoBehaviour:
   dragLimit: 3
   forceToAdd: 20
   glove: {fileID: 555702471}
+  trajectoryLine: {fileID: 2021095369}
   ballRb: {fileID: 2021095366}
   ballCol: {fileID: 2021095365}
 --- !u!58 &2021095365
@@ -1531,12 +1533,35 @@ Transform:
   m_GameObject: {fileID: 2021095362}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -19.25, y: -9.65, z: 0}
+  m_LocalPosition: {x: 13.2, y: -18.6, z: 0}
   m_LocalScale: {x: 0.13901034, y: 0.13901034, z: 0.13901034}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2021095369
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2021095362}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68963b25aa502fb4fb3bfc73f00de633, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrajectoryLine
+  line: {fileID: 2021095363}
+  rb: {fileID: 2021095366}
+  dotPrefab: {fileID: 5363878690478172271, guid: 7427650370695ec49aee72520474349d, type: 3}
+  dotCount: 5
+  dotTimeStep: 0.1
+  pointCount: 30
+  timeStep: 0.05
+  maxPreviewTime: 1.2
+  maxPreviewDistance: 8
+  startAlpha: 1
+  endAlpha: 0
 --- !u!1 &2133920994
 GameObject:
   m_ObjectHideFlags: 0
@@ -1570,13 +1595,11 @@ MonoBehaviour:
   tapToStartUI: {fileID: 434598426}
   gameOverUI: {fileID: 996251065}
   dragController: {fileID: 2021095364}
-  goalGlove: {fileID: 1162342452034890374, guid: 0519142f855f689439e609193976bf40, type: 3}
   difficultyDirector: {fileID: 1620100910}
   gloveSpawner: {fileID: 1674694099}
-  currentGlove: {fileID: 1162342452034890374, guid: 0519142f855f689439e609193976bf40, type: 3}
-  score: 0
   ballRb: {fileID: 2021095366}
   ballTf: {fileID: 2021095368}
+  score: 0
 --- !u!4 &2133920996
 Transform:
   m_ObjectHideFlags: 0
@@ -1602,11 +1625,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2343369271829073771, guid: 0519142f855f689439e609193976bf40, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -5.43
+      value: 49.2
       objectReference: {fileID: 0}
     - target: {fileID: 2343369271829073771, guid: 0519142f855f689439e609193976bf40, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 4.91
+      value: -18.3
       objectReference: {fileID: 0}
     - target: {fileID: 2343369271829073771, guid: 0519142f855f689439e609193976bf40, type: 3}
       propertyPath: m_LocalPosition.z

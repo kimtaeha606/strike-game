@@ -6,6 +6,12 @@ public sealed class TrajectoryLine : MonoBehaviour
     [SerializeField] private LineRenderer line;
     [SerializeField] private Rigidbody2D rb;
 
+    [Header("Dots")]
+    [SerializeField] private GameObject dotPrefab;
+    [SerializeField] private int dotCount = 20;
+    [SerializeField] private float dotTimeStep = 0.1f;
+    private GameObject[] dots;
+
     [Header("Sampling")]
     [SerializeField] private int pointCount = 30;
     [SerializeField] private float timeStep = 0.05f;
@@ -25,6 +31,8 @@ public sealed class TrajectoryLine : MonoBehaviour
         if (rb == null) rb = GetComponent<Rigidbody2D>();
         ApplyAlphaGradient();
         if (line != null) { line.enabled = false; line.positionCount = 0; }
+        EnsureDots();
+        Hide();
     }
 
     private void OnValidate()
@@ -33,14 +41,25 @@ public sealed class TrajectoryLine : MonoBehaviour
         if (timeStep <= 0f) timeStep = 0.02f;
         if (maxPreviewTime <= 0f) maxPreviewTime = 0.2f;
         if (maxPreviewDistance <= 0f) maxPreviewDistance = 1f;
+        if (dotCount < 2) dotCount = 2;
+        if (dotTimeStep <= 0f) dotTimeStep = 0.05f;
 
         ApplyAlphaGradient();
     }
 
     public void Show(Vector2 startPos, Vector2 v0)
     {
-        if (line == null || rb == null) return;
+        if (rb == null) return;
 
+        if (dotPrefab != null)
+        {
+            EnsureDots();
+            UpdateDots(startPos, v0);
+            if (line != null) { line.enabled = false; line.positionCount = 0; }
+            return;
+        }
+
+        if (line == null) return;
         line.enabled = true;
 
         Vector2 g = Physics2D.gravity * rb.gravityScale;
@@ -82,9 +101,19 @@ public sealed class TrajectoryLine : MonoBehaviour
 
     public void Hide()
     {
-        if (line == null) return;
-        line.enabled = false;
-        line.positionCount = 0;
+        if (line != null)
+        {
+            line.enabled = false;
+            line.positionCount = 0;
+        }
+
+        if (dots != null)
+        {
+            for (int i = 0; i < dots.Length; i++)
+            {
+                if (dots[i] != null) dots[i].SetActive(false);
+            }
+        }
     }
 
     private void ApplyAlphaGradient()
@@ -111,5 +140,45 @@ public sealed class TrajectoryLine : MonoBehaviour
         );
 
         line.colorGradient = g;
+    }
+
+    private void EnsureDots()
+    {
+        if (dotPrefab == null) return;
+        if (dots != null && dots.Length == dotCount) return;
+
+        if (dots != null)
+        {
+            for (int i = 0; i < dots.Length; i++)
+            {
+                if (dots[i] == null) continue;
+                if (Application.isPlaying)
+                    Destroy(dots[i]);
+                else
+                    DestroyImmediate(dots[i]);
+            }
+        }
+
+        dots = new GameObject[dotCount];
+        for (int i = 0; i < dotCount; i++)
+        {
+            dots[i] = Instantiate(dotPrefab, transform);
+            dots[i].SetActive(false);
+        }
+    }
+
+    private void UpdateDots(Vector2 startPos, Vector2 v0)
+    {
+        if (dots == null || dots.Length == 0) return;
+
+        Vector2 g = Physics2D.gravity * rb.gravityScale;
+
+        for (int i = 0; i < dots.Length; i++)
+        {
+            float t = i * dotTimeStep;
+            Vector2 p = startPos + v0 * t + 0.5f * g * t * t;
+            dots[i].transform.position = p;
+            dots[i].SetActive(true);
+        }
     }
 }
