@@ -9,14 +9,12 @@ public sealed class GloveSpawner : MonoBehaviour
     [SerializeField] private float minY = -3.5f;
     [SerializeField] private float maxY = 3.5f;
 
-    [Tooltip("x¿¡ ¾à°£ ·£´ıÀ» ÁÖ°í ½ÍÀ¸¸é »ç¿ë. 0ÀÌ¸é °íÁ¤")]
+    [Tooltip("xì¶•ì— ëœë¤ í”ë“¤ë¦¼. 0ì´ë©´ ì—†ìŒ")]
     [SerializeField] private float xJitter = 0f;
 
-    [Tooltip("y ·£´ıÀ» ´ú Èçµé°í ½ÍÀ¸¸é »ç¿ë. 1=±×´ë·Î, 0=Ç×»ó 0")]
+    [Tooltip("y ëœë¤ê°’ì„ ì–¼ë§ˆë‚˜ ë°˜ì˜í• ì§€. 1=ê·¸ëŒ€ë¡œ, 0=í•­ìƒ 0")]
     [Range(0f, 1f)]
     [SerializeField] private float yRandomness = 1f;
-
-    private GoalGlove pooledNext;
 
     public GoalGlove SpawnNext(GoalGlove current, GloveSpec spec)
     {
@@ -32,8 +30,8 @@ public sealed class GloveSpawner : MonoBehaviour
             return null;
         }
 
-        if (pooledNext == null)
-            pooledNext = Instantiate(glovePrefab);
+        // âœ… ë§¤ë²ˆ ìƒˆë¡œ ìƒì„±
+        GoalGlove next = Instantiate(glovePrefab);
 
         Vector3 basePos = current.transform.position;
 
@@ -43,20 +41,17 @@ public sealed class GloveSpawner : MonoBehaviour
         float rawY = Random.Range(minY, maxY);
         float y = Mathf.Lerp(0f, rawY, yRandomness);
 
-        pooledNext.transform.position = new Vector3(x, y, 0f);
+        next.transform.position = new Vector3(x, y, 0f);
 
         float s = Mathf.Max(0.01f, spec.scale);
-        pooledNext.transform.localScale = Vector3.one * s;
+        next.transform.localScale = Vector3.one * s;
 
-       //  4) (¼±ÅÃ) ¿òÁ÷ÀÓ ÆÄ¶ó¹ÌÅÍ Àû¿ë: GloveMover°¡ ÀÖÀ¸¸é ¼¼ÆÃ
-        //var mover = pooledNext.GetComponent<GloveMover>();
-        //if (mover != null)
-        //{
-        //    mover.SetParams(spec.moveAmpX, spec.moveAmpY, spec.moveSpeed);
-        //}
+        return next;
+    }
 
-        return pooledNext;
+    public void Despawn(GoalGlove glove)
+    {
+        if (glove == null) return;
+        Destroy(glove.gameObject);
     }
 }
-    
-

@@ -13,38 +13,89 @@ public sealed class GameFlow : MonoBehaviour
     [Header("Refs")]
     [SerializeField] private DragController dragController;
 
-    [Header("Refs")]
-    [SerializeField] private GoalGlove goalGlove;
+    [Header("Spawn/Director")]
     [SerializeField] private DifficultyDirector difficultyDirector;
     [SerializeField] private GloveSpawner gloveSpawner;
 
-    [SerializeField] private GoalGlove currentGlove;
-    private GoalGlove nextGlove;
+    [Header("Ball")]
+    [SerializeField] private Rigidbody2D ballRb;
+    [SerializeField] private Transform ballTf;
+
     [Header("Score")]
     [SerializeField] private int score = 0;
 
-    [SerializeField] private Rigidbody2D ballRb;
-    [SerializeField] private Transform ballTf;
     public int Score => score;
-
-    // (선택) UI가 구독할 수 있게 점수 변경 이벤트 제공
     public event Action<int> OnScoreChanged;
 
     private const string BestScoreKey = "BEST_SCORE";
-
     public int BestScore => PlayerPrefs.GetInt(BestScoreKey, 0);
 
+    // Runtime gloves (no inspector)
+    private GoalGlove currentGlove;
+    private GoalGlove nextGlove;
 
+    // 현재 구독 중인 컴포넌트(=currentGlove)
+    private GoalGlove subscribedGlove;
+
+    private void Awake()
+    {
+        // 시작 글러브 자동 탐색
+        currentGlove = FindFirstObjectByType<GoalGlove>();
+        if (currentGlove == null)
+        {
+            Debug.LogError("[GameFlow] Scene에 GoalGlove가 없음 (시작 글러브 필요)");
+            return;
+        }
+
+        SetCurrentGlove(currentGlove);
+    }
 
     private void Start()
     {
         EnterReady();
     }
 
+    private void OnDisable()
+    {
+        UnsubscribeCurrentGlove();
+    }
+
+    private void SetCurrentGlove(GoalGlove newGlove)
+    {
+        UnsubscribeCurrentGlove();
+
+        currentGlove = newGlove;
+        if (currentGlove == null) return;
+
+        // 요청대로: currentGlove에서 컴포넌트 다시 찾기
+        subscribedGlove = currentGlove.GetComponent<GoalGlove>();
+        if (subscribedGlove == null)
+        {
+            Debug.LogError("[GameFlow] currentGlove에 GoalGlove 컴포넌트가 없음");
+            return;
+        }
+
+        subscribedGlove.OnScored += HandleScored;
+        subscribedGlove.OnMissed += HandleMissed;
+
+        if (dragController != null) dragController.Glove = currentGlove;
+
+        // 드래그 컨트롤러에 현재 글러브 반영
+
+    }
+
+    private void UnsubscribeCurrentGlove()
+    {
+        if (subscribedGlove == null) return;
+
+        subscribedGlove.OnScored -= HandleScored;
+        subscribedGlove.OnMissed -= HandleMissed;
+        subscribedGlove = null;
+    }
+
     public void OnTapToStart()
     {
-        if (state != GameState.Ready)
-            return;
+        if (state != GameState.Ready) return;
         EnterPlaying();
     }
 
@@ -52,69 +103,62 @@ public sealed class GameFlow : MonoBehaviour
     {
         state = GameState.Ready;
 
-        // UI
-        if (tapToStartUI != null)
-            tapToStartUI.SetActive(true);
+        if (tapToStartUI != null) tapToStartUI.SetActive(true);
+        if (gameOverUI != null) gameOverUI.SetActive(false);
 
-        if (gameOverUI != null)
-            gameOverUI.SetActive(false);
-
-        // �Է� / ���� ����
-        if (dragController != null)
-            dragController.EnableInput(false);
+        if (dragController != null) dragController.EnableInput(false);
     }
 
     private void EnterPlaying()
     {
         state = GameState.Playing;
 
-        // UI
-        if (tapToStartUI != null)
-            tapToStartUI.SetActive(false);
+        if (tapToStartUI != null) tapToStartUI.SetActive(false);
+        if (gameOverUI != null) gameOverUI.SetActive(false);
 
-        if (gameOverUI != null)
-            gameOverUI.SetActive(false);
+        if (dragController != null) dragController.EnableInput(true);
 
-        // �Է� ���
-        if (dragController != null)
-            dragController.EnableInput(true);
+        // 시작 샷 Arm
+        ArmCurrentShot();
+        EnsureNextGlovePrepared();
+    }
 
-        
+    private void EnsureNextGlovePrepared()
+    {
+        if (nextGlove != null) return;
+        if (difficultyDirector == null || gloveSpawner == null || currentGlove == null) return;
+
+        GloveSpec spec = difficultyDirector.GetNextSpec(score);
+        nextGlove = gloveSpawner.SpawnNext(currentGlove, spec);
     }
 
     private void EnterGameOver()
     {
         state = GameState.GameOver;
 
-        if (gameOverUI != null)
-            gameOverUI.SetActive(true);
+        if (gameOverUI != null) gameOverUI.SetActive(true);
 
-        if (dragController != null)
-            dragController.EnableInput(false);
-    }
+        if (dragController != null) dragController.EnableInput(false);
 
-        private void OnEnable()
-    {
-        if (goalGlove != null)
-        {
-            goalGlove.OnScored += HandleScored;
-            goalGlove.OnMissed += HandleMissed;
-        }
-    }
-
-    private void OnDisable()
-    {
-        if (goalGlove != null)
-        {
-            goalGlove.OnScored -= HandleScored;
-            goalGlove.OnMissed -= HandleMissed;
-        }
+        // 샷 해제
+        if (subscribedGlove != null)
+            subscribedGlove.DisarmShot();
     }
 
     public void StartNewGame()
     {
         score = 0;
         OnScoreChanged?.Invoke(score);
+
+        // (선택) 공을 현재 글러브 시작점으로 리셋
+        if (currentGlove != null)
+            ResetBallTo(currentGlove.StartPoint.position);
+
+        // nextGlove 프리로드 제거 (필요시 다시 생성)
+        nextGlove = null;
+
+        // Ready에서 시작하도록 하는 설계면 여기서는 Arm 안 해도 됨.
+        // Playing 들어갈 때 ArmCurrentShot()가 호출됨.
     }
 
     private void ResetBallTo(Vector3 worldPos)
@@ -123,24 +167,42 @@ public sealed class GameFlow : MonoBehaviour
 
         Transform t = (ballTf != null) ? ballTf : ballRb.transform;
 
-        // 위치 스냅
         t.position = worldPos;
-
-        // 물리 초기화
         ballRb.linearVelocity = Vector2.zero;
         ballRb.angularVelocity = 0f;
 
-        // (선택) 물리 안정화
         ballRb.Sleep();
         ballRb.WakeUp();
     }
 
+    private Collider2D GetBallCollider()
+    {
+        if (ballRb == null) return null;
+        return ballRb.GetComponent<Collider2D>();
+    }
+
+    private void ArmCurrentShot()
+    {
+        if (subscribedGlove == null) return;
+
+        Collider2D ballCol = GetBallCollider();
+        if (ballCol == null)
+        {
+            Debug.LogError("[GameFlow] Ball Collider missing (ballRb에 Collider2D 필요)");
+            return;
+        }
+
+        subscribedGlove.ArmShot(ballCol);
+    }
+
     private void HandleScored(GoalGlove glove)
     {
+        if (state != GameState.Playing) return;
+
         score += 1;
         OnScoreChanged?.Invoke(score);
 
-        // (저장) BestScore 갱신
+        // BestScore 갱신
         int best = PlayerPrefs.GetInt(BestScoreKey, 0);
         if (score > best)
         {
@@ -148,41 +210,51 @@ public sealed class GameFlow : MonoBehaviour
             PlayerPrefs.Save();
         }
 
+        if (difficultyDirector == null || gloveSpawner == null || currentGlove == null)
+        {
+            Debug.LogError("[GameFlow] Missing refs (difficultyDirector / gloveSpawner / currentGlove)");
+            return;
+        }
+
+        // ✅ 이전 current 기록(나중에 삭제/정리 용도)
+        GoalGlove oldCurrent = currentGlove;
+
+        // ✅ 이번 샷 종료(기존 current에 대해)
+        if (subscribedGlove != null)
+            subscribedGlove.DisarmShot();
+
+        // next 없으면 생성
         if (nextGlove == null)
         {
             GloveSpec spec = difficultyDirector.GetNextSpec(score);
-            nextGlove = gloveSpawner.SpawnNext(currentGlove, spec);
+            nextGlove = gloveSpawner.SpawnNext(oldCurrent, spec);
             if (nextGlove == null) return;
         }
 
-        currentGlove = nextGlove;
+        // current 교체(구독 대상도 교체)
+        SetCurrentGlove(nextGlove);
 
-        if (dragController != null)
-            dragController.SetCurrentGlove(currentGlove);
-
+        // 공 리셋
         ResetBallTo(currentGlove.StartPoint.position);
-        goalGlove.DisarmShot();
 
+        // ✅ 다음 샷 시작
+        ArmCurrentShot();
+
+        // 다음 글러브 미리 생성
         GloveSpec nextSpec = difficultyDirector.GetNextSpec(score);
         nextGlove = gloveSpawner.SpawnNext(currentGlove, nextSpec);
+
+        // ✅ 이전 글러브 삭제(원하면)
+        // 스포너를 "매번 Instantiate" 방식으로 바꿨다면 아래를 켜라.
+        // (풀링 1개 구조면 Destroy하면 안 됨)
+        //
+        //if (oldCurrent != null && oldCurrent != currentGlove)
+             //Destroy(oldCurrent.gameObject);
     }
 
     private void HandleMissed(GoalGlove glove)
     {
+        if (state != GameState.Playing) return;
         EnterGameOver();
-    }
-
-    private void SpawnNextGlove(int score)
-    {
-        if (difficultyDirector == null || gloveSpawner == null)
-        {
-            {
-                Debug.LogError("[GameFlow] Missing refs (difficultyDirector / gloveSpawner / currentGlove)");
-                return;
-            }
-        }
-        GloveSpec spec = difficultyDirector.GetNextSpec(score);
-
-        nextGlove = gloveSpawner.SpawnNext(currentGlove,spec);
     }
 }

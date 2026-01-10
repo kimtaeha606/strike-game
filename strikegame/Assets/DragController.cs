@@ -10,6 +10,12 @@ public class DragController : MonoBehaviour
     public float dragLimit = 3f;
     public float forceToAdd = 10f;
     [SerializeField] private GoalGlove glove;
+
+    public GoalGlove Glove
+    {
+        get => glove;
+        set => glove = value;
+    }
     [SerializeField] private Rigidbody2D ballRb;
     [SerializeField] private Collider2D ballCol;
 
@@ -28,10 +34,7 @@ public class DragController : MonoBehaviour
         }
     }
 
-    public void SetCurrentGlove(GoalGlove currentGlove) // 현재 글러브가 어떤 글러브인지 알려주는 용도인데 이 스크립트랑 역할이 안 맞는데 일단 놔둠
-    {
-        glove = currentGlove;
-    }
+
     Vector3 MousePosition
     {
         get
@@ -132,3 +135,4 @@ public class DragController : MonoBehaviour
             rb.AddForce(-(Vector2)dragVector * forceToAdd, ForceMode2D.Impulse);
         }
 }
+
