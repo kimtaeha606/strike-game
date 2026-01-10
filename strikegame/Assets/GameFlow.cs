@@ -25,7 +25,7 @@ public sealed class GameFlow : MonoBehaviour
         EnterPlaying();
     }
 
-    private void EnterReady()
+    public void EnterReady()
     {
         state = GameState.Ready;
 
