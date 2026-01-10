@@ -1653,7 +1653,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 98201b63785802540a5dff20a8b15674, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1678,10 +1678,10 @@ LineRenderer:
   m_MaskInteraction: 0
   m_Positions:
   - {x: 0, y: 0, z: 0}
-  - {x: 3, y: 0, z: 1}
+  - {x: 10, y: 0, z: 1}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 1.2388195
+    widthMultiplier: 0.1
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -1694,21 +1694,12 @@ LineRenderer:
         weightedMode: 0
         inWeight: 0.33333334
         outWeight: 0.33333334
-      - serializedVersion: 3
-        time: 0.821825
-        value: 0.23182924
-        inSlope: 0.4867131
-        outSlope: 0.4867131
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.15714905
-        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 1}
+      key0: {r: 1, g: 1, b: 1, a: 0}
       key1: {r: 1, g: 1, b: 1, a: 0}
       key2: {r: 0, g: 0, b: 0, a: 1}
       key3: {r: 0, g: 0, b: 0, a: 1}
@@ -1725,7 +1716,7 @@ LineRenderer:
       ctime6: 0
       ctime7: 0
       atime0: 0
-      atime1: 55769
+      atime1: 65535
       atime2: 61680
       atime3: 61680
       atime4: 0
@@ -1737,9 +1728,9 @@ LineRenderer:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
     numCornerVertices: 0
-    numCapVertices: 32
+    numCapVertices: 0
     alignment: 0
-    textureMode: 0
+    textureMode: 1
     textureScale: {x: 1, y: 1}
     shadowBias: 0.5
     generateLightingData: 0
@@ -1935,6 +1926,8 @@ MonoBehaviour:
   tapToStartUI: {fileID: 434598426}
   gameOverUI: {fileID: 996251065}
   dragController: {fileID: 2021095364}
+  goalGlove: {fileID: 0}
+  score: 0
 --- !u!4 &2133920996
 Transform:
   m_ObjectHideFlags: 0
